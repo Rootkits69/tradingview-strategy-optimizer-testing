@@ -1,0 +1,335 @@
+{
+  "runCount": 18,
+  "bestScore": -11356.2,
+  "bestCombo": {
+    "enableHTFSentiment": {
+      "label": "🧭 Enable HTF Sentiment",
+      "type": "checkbox",
+      "value": "false"
+    },
+    "useMomentumFilter": {
+      "label": "🚀 Use Momentum Filter",
+      "type": "checkbox",
+      "value": "true"
+    },
+    "entryFibAdjust": {
+      "label": "📐 Entry Fib Adjust",
+      "type": "numeric",
+      "value": 1.1
+    },
+    "fibRatio": {
+      "label": "📊 Fib Ratio",
+      "type": "numeric",
+      "value": 1.2
+    },
+    "stopLossMode": {
+      "label": "🛑 Stop Loss Mode",
+      "type": "select",
+      "value": "Fixed Tick SL"
+    },
+    "hTFSentimentTimeframe": {
+      "label": "🧭 HTF Sentiment Timeframe",
+      "type": "select",
+      "value": "30 minutes|3 hours|4 hours"
+    },
+    "trailStepSizeTicks": {
+      "label": "📊 Trail Step Size (Ticks)",
+      "type": "numeric",
+      "value": "15"
+    },
+    "trailTriggerTicks": {
+      "label": "🎯 Trail Trigger (Ticks)",
+      "type": "numeric",
+      "value": "15"
+    },
+    "fixedSLDistanceTicks": {
+      "label": "📏 Fixed SL Distance (Ticks)",
+      "type": "numeric",
+      "value": 180
+    },
+    "tickTPDistance": {
+      "label": "📏 Tick TP Distance",
+      "type": "numeric",
+      "value": 18
+    }
+  },
+  "valueStats": {
+    "entryFibAdjust": {
+      "1.1": {
+        "count": 17,
+        "scoreSum": -590077.8,
+        "bestScore": -11356.2
+      },
+      "0.7": {
+        "count": 1,
+        "scoreSum": -61831.8,
+        "bestScore": -61831.8
+      }
+    },
+    "fibRatio": {
+      "2": {
+        "count": 1,
+        "scoreSum": -24961.6,
+        "bestScore": -24961.6
+      },
+      "1.2": {
+        "count": 14,
+        "scoreSum": -515444.50000000006,
+        "bestScore": -11356.2
+      },
+      "1.6": {
+        "count": 2,
+        "scoreSum": -85427.3,
+        "bestScore": -23595.5
+      },
+      "1.8": {
+        "count": 1,
+        "scoreSum": -26076.2,
+        "bestScore": -26076.2
+      }
+    },
+    "enableHTFSentiment": {
+      "true": {
+        "count": 2,
+        "scoreSum": -121426.8,
+        "bestScore": -59595
+      },
+      "false": {
+        "count": 16,
+        "scoreSum": -530482.7999999999,
+        "bestScore": -11356.2
+      }
+    },
+    "useMomentumFilter": {
+      "true": {
+        "count": 15,
+        "scoreSum": -559245.7,
+        "bestScore": -11356.2
+      },
+      "false": {
+        "count": 3,
+        "scoreSum": -92663.9,
+        "bestScore": -20081
+      }
+    },
+    "enableTickTP": {
+      "true": {
+        "count": 2,
+        "scoreSum": -79747.6,
+        "bestScore": -17915.8
+      }
+    },
+    "enableMAXTP": {
+      "false": {
+        "count": 10,
+        "scoreSum": -267467.60000000003,
+        "bestScore": -17915.8
+      },
+      "true": {
+        "count": 1,
+        "scoreSum": -30539.1,
+        "bestScore": -30539.1
+      }
+    },
+    "stopLossMode": {
+      "trailing sl": {
+        "count": 8,
+        "scoreSum": -422294.3000000001,
+        "bestScore": -17915.8
+      },
+      "fixed tick sl": {
+        "count": 10,
+        "scoreSum": -229615.3,
+        "bestScore": -11356.2
+      }
+    },
+    "tickTPDistance": {
+      "10": {
+        "count": 5,
+        "scoreSum": -131939.9,
+        "bestScore": -23595.5
+      },
+      "18": {
+        "count": 12,
+        "scoreSum": -471373.3000000001,
+        "bestScore": -11356.2
+      },
+      "26": {
+        "count": 1,
+        "scoreSum": -48596.4,
+        "bestScore": -48596.4
+      }
+    },
+    "hTFSentimentTimeframe": {
+      "30 minutes": {
+        "count": 2,
+        "scoreSum": -121426.8,
+        "bestScore": -59595
+      },
+      "30 minutes|3 hours|4 hours": {
+        "count": 16,
+        "scoreSum": -530482.7999999999,
+        "bestScore": -11356.2
+      }
+    },
+    "enableTPProtection": {
+      "false": {
+        "count": 2,
+        "scoreSum": -79747.6,
+        "bestScore": -17915.8
+      },
+      "true": {
+        "count": 9,
+        "scoreSum": -218259.1,
+        "bestScore": -20081
+      }
+    },
+    "trailStepSizeTicks": {
+      "10": {
+        "count": 7,
+        "scoreSum": -360462.50000000006,
+        "bestScore": -17915.8
+      },
+      "15": {
+        "count": 10,
+        "scoreSum": -229615.3,
+        "bestScore": -11356.2
+      },
+      "20": {
+        "count": 1,
+        "scoreSum": -61831.8,
+        "bestScore": -61831.8
+      }
+    },
+    "trailTriggerTicks": {
+      "10": {
+        "count": 7,
+        "scoreSum": -353628.60000000003,
+        "bestScore": -17915.8
+      },
+      "15": {
+        "count": 10,
+        "scoreSum": -229615.3,
+        "bestScore": -11356.2
+      },
+      "20": {
+        "count": 1,
+        "scoreSum": -68665.7,
+        "bestScore": -68665.7
+      }
+    },
+    "fixedSLDistanceTicks": {
+      "120": {
+        "count": 3,
+        "scoreSum": -74606.6,
+        "bestScore": -20081
+      },
+      "180": {
+        "count": 15,
+        "scoreSum": -577303,
+        "bestScore": -11356.2
+      }
+    },
+    "enableFastTP": {
+      "true": {
+        "count": 8,
+        "scoreSum": -187720,
+        "bestScore": -20081
+      },
+      "false": {
+        "count": 1,
+        "scoreSum": -30539.1,
+        "bestScore": -30539.1
+      }
+    }
+  },
+  "seenComboKeys": [
+    "entryFibAdjust=1.1|fibRatio=1.2|enableHTFSentiment=true|useMomentumFilter=true|enableTickTP=true|enableMAXTP=false|stopLossMode=Trailing SL|tickTPDistance=18|hTFSentimentTimeframe=30 minutes|enableTPProtection=false|trailStepSizeTicks=20|trailTriggerTicks=10|fixedSLDistanceTicks=180",
+    "entryFibAdjust=1.1|fibRatio=1.2|enableHTFSentiment=false|useMomentumFilter=true|enableTickTP=true|enableMAXTP=false|stopLossMode=Trailing SL|tickTPDistance=18|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|enableTPProtection=false|trailStepSizeTicks=10|trailTriggerTicks=10|fixedSLDistanceTicks=180",
+    "enableHTFSentiment=false|useMomentumFilter=true|entryFibAdjust=0.7|fibRatio=1.6|stopLossMode=Trailing SL|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=10|trailTriggerTicks=10|fixedSLDistanceTicks=180|tickTPDistance=18",
+    "enableHTFSentiment=false|useMomentumFilter=true|entryFibAdjust=1.1|fibRatio=1.2|stopLossMode=Trailing SL|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=10|trailTriggerTicks=20|fixedSLDistanceTicks=180|tickTPDistance=18",
+    "enableHTFSentiment=true|useMomentumFilter=true|entryFibAdjust=1.1|fibRatio=1.2|stopLossMode=Trailing SL|hTFSentimentTimeframe=30 minutes|trailStepSizeTicks=10|trailTriggerTicks=10|fixedSLDistanceTicks=180|tickTPDistance=18",
+    "enableHTFSentiment=false|useMomentumFilter=true|entryFibAdjust=1.1|fibRatio=1.2|stopLossMode=Trailing SL|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=10|trailTriggerTicks=10|fixedSLDistanceTicks=180|tickTPDistance=18",
+    "enableHTFSentiment=false|useMomentumFilter=false|entryFibAdjust=1.1|fibRatio=1.2|stopLossMode=Trailing SL|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=10|trailTriggerTicks=10|fixedSLDistanceTicks=180|tickTPDistance=18",
+    "enableHTFSentiment=false|useMomentumFilter=true|entryFibAdjust=1.1|fibRatio=1.2|stopLossMode=Trailing SL|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=10|trailTriggerTicks=10|fixedSLDistanceTicks=180|tickTPDistance=26",
+    "enableHTFSentiment=false|useMomentumFilter=true|entryFibAdjust=1.1|fibRatio=1.2|stopLossMode=Fixed Tick SL|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=15|trailTriggerTicks=15|fixedSLDistanceTicks=180|tickTPDistance=18",
+    "enableHTFSentiment=false|useMomentumFilter=true|entryFibAdjust=1.1|fibRatio=1.2|stopLossMode=Fixed Tick SL|enableMAXTP=false|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=15|trailTriggerTicks=15|fixedSLDistanceTicks=180|enableFastTP=true|enableTPProtection=true|tickTPDistance=18",
+    "enableHTFSentiment=false|useMomentumFilter=true|entryFibAdjust=1.1|fibRatio=1.2|stopLossMode=Fixed Tick SL|enableMAXTP=false|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=15|trailTriggerTicks=15|fixedSLDistanceTicks=120|enableFastTP=true|enableTPProtection=true|tickTPDistance=18",
+    "enableHTFSentiment=false|useMomentumFilter=false|entryFibAdjust=1.1|fibRatio=1.2|stopLossMode=Fixed Tick SL|enableMAXTP=false|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=15|trailTriggerTicks=15|fixedSLDistanceTicks=180|enableFastTP=true|enableTPProtection=true|tickTPDistance=18",
+    "enableHTFSentiment=false|useMomentumFilter=true|entryFibAdjust=1.1|fibRatio=2|stopLossMode=Fixed Tick SL|enableMAXTP=false|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=15|trailTriggerTicks=15|fixedSLDistanceTicks=180|enableFastTP=true|enableTPProtection=true|tickTPDistance=10",
+    "enableHTFSentiment=false|useMomentumFilter=true|entryFibAdjust=1.1|fibRatio=1.8|stopLossMode=Fixed Tick SL|enableMAXTP=false|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=15|trailTriggerTicks=15|fixedSLDistanceTicks=180|enableFastTP=true|enableTPProtection=true|tickTPDistance=18",
+    "enableHTFSentiment=false|useMomentumFilter=true|entryFibAdjust=1.1|fibRatio=1.2|stopLossMode=Fixed Tick SL|enableMAXTP=true|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=15|trailTriggerTicks=15|fixedSLDistanceTicks=120|enableFastTP=false|enableTPProtection=true|tickTPDistance=10",
+    "enableHTFSentiment=false|useMomentumFilter=true|entryFibAdjust=1.1|fibRatio=1.6|stopLossMode=Fixed Tick SL|enableMAXTP=false|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=15|trailTriggerTicks=15|fixedSLDistanceTicks=180|enableFastTP=true|enableTPProtection=true|tickTPDistance=10",
+    "enableHTFSentiment=false|useMomentumFilter=false|entryFibAdjust=1.1|fibRatio=1.2|stopLossMode=Fixed Tick SL|enableMAXTP=false|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=15|trailTriggerTicks=15|fixedSLDistanceTicks=120|enableFastTP=true|enableTPProtection=true|tickTPDistance=10",
+    "enableHTFSentiment=false|useMomentumFilter=true|entryFibAdjust=1.1|fibRatio=1.2|stopLossMode=Fixed Tick SL|enableMAXTP=false|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=15|trailTriggerTicks=15|fixedSLDistanceTicks=180|enableFastTP=true|enableTPProtection=true|tickTPDistance=10"
+  ],
+  "lastCombo": {
+    "enableHTFSentiment": {
+      "label": "🧭 Enable HTF Sentiment",
+      "type": "checkbox",
+      "value": "false"
+    },
+    "useMomentumFilter": {
+      "label": "🚀 Use Momentum Filter",
+      "type": "checkbox",
+      "value": "true"
+    },
+    "entryFibAdjust": {
+      "label": "📐 Entry Fib Adjust",
+      "type": "numeric",
+      "value": 1.1
+    },
+    "fibRatio": {
+      "label": "📊 Fib Ratio",
+      "type": "numeric",
+      "value": 1.2
+    },
+    "stopLossMode": {
+      "label": "🛑 Stop Loss Mode",
+      "type": "select",
+      "value": "Fixed Tick SL"
+    },
+    "enableMAXTP": {
+      "label": "🚀 Enable MAX TP",
+      "type": "checkbox",
+      "value": "false"
+    },
+    "hTFSentimentTimeframe": {
+      "label": "🧭 HTF Sentiment Timeframe",
+      "type": "select",
+      "value": "30 minutes|3 hours|4 hours"
+    },
+    "trailStepSizeTicks": {
+      "label": "📊 Trail Step Size (Ticks)",
+      "type": "numeric",
+      "value": "15"
+    },
+    "trailTriggerTicks": {
+      "label": "🎯 Trail Trigger (Ticks)",
+      "type": "numeric",
+      "value": "15"
+    },
+    "fixedSLDistanceTicks": {
+      "label": "📏 Fixed SL Distance (Ticks)",
+      "type": "numeric",
+      "value": 180
+    },
+    "enableFastTP": {
+      "label": "⚡ Enable Fast TP",
+      "type": "checkbox",
+      "value": "true"
+    },
+    "enableTPProtection": {
+      "label": "🛡️ Enable TP Protection",
+      "type": "checkbox",
+      "value": "true"
+    },
+    "tickTPDistance": {
+      "label": "📏 Tick TP Distance",
+      "type": "numeric",
+      "value": 10
+    }
+  },
+  "lastComboKey": "enableHTFSentiment=false|useMomentumFilter=true|entryFibAdjust=1.1|fibRatio=1.2|stopLossMode=Fixed Tick SL|enableMAXTP=false|hTFSentimentTimeframe=30 minutes|3 hours|4 hours|trailStepSizeTicks=15|trailTriggerTicks=15|fixedSLDistanceTicks=180|enableFastTP=true|enableTPProtection=true|tickTPDistance=10",
+  "updatedAt": "2026-03-11T14:38:51.690Z"
+}

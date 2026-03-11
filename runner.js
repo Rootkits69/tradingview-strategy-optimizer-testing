@@ -21,6 +21,14 @@ const RESUME_FILE = (() => {
   return null;
 })();
 
+const ADAPTIVE_MODE = !process.argv.includes("--no-adaptive");
+const WIPE_MEMORY = process.argv.includes("--wipe-memory");
+const LEARNING_STATE_FILE = (() => {
+  const idx = process.argv.indexOf("--learning-state");
+  if (idx !== -1 && process.argv[idx + 1]) return process.argv[idx + 1];
+  return "learning_state.json";
+})();
+
 const DEBUG = true;
 
 function getTimestamp() {
@@ -227,20 +235,27 @@ function getDefaults(paramRows) {
   return defaults;
 }
 
-function rawConditionMet(param, vals) {
+function resolveDepValue(depParam, vals, currentState, fullDefaults) {
+  if (vals[depParam] !== undefined) return vals[depParam];
+  if (currentState && currentState[depParam] !== undefined) return currentState[depParam];
+  return fullDefaults ? fullDefaults[depParam] : undefined;
+}
+
+function rawConditionMet(param, vals, currentState, fullDefaults) {
   const cond = CONDITIONS[param];
   if (!cond) return true;
-  const depVal = vals[cond.dependsOn];
+  const depVal = resolveDepValue(cond.dependsOn, vals, currentState, fullDefaults);
   return depVal !== undefined &&
     String(depVal).trim().toLowerCase() === String(cond.requiredValue).trim().toLowerCase();
 }
 
-function countFilteredCombos(ordered, defaults) {
+function countFilteredCombos(ordered, defaults, currentState, fullDefaults) {
+  const merged = { ...fullDefaults, ...defaults };
   function count(idx, vals) {
     if (idx === ordered.length) return 1;
     const r = ordered[idx];
-    if (!rawConditionMet(r.parameter, vals)) {
-      vals[r.parameter] = defaults[r.parameter] ?? r.values[0];
+    if (!rawConditionMet(r.parameter, vals, currentState, merged)) {
+      vals[r.parameter] = merged[r.parameter] ?? r.values[0];
       const n = count(idx + 1, vals);
       delete vals[r.parameter];
       return n;
@@ -256,7 +271,8 @@ function countFilteredCombos(ordered, defaults) {
   return count(0, {});
 }
 
-function* generateFilteredCombos(ordered, defaults) {
+function* generateFilteredCombos(ordered, defaults, currentState, fullDefaults) {
+  const merged = { ...fullDefaults, ...defaults };
   function* recurse(idx, vals) {
     if (idx === ordered.length) {
       const combo = {};
@@ -267,8 +283,8 @@ function* generateFilteredCombos(ordered, defaults) {
       return;
     }
     const r = ordered[idx];
-    if (!rawConditionMet(r.parameter, vals)) {
-      vals[r.parameter] = defaults[r.parameter] ?? r.values[0];
+    if (!rawConditionMet(r.parameter, vals, currentState, merged)) {
+      vals[r.parameter] = merged[r.parameter] ?? r.values[0];
       yield* recurse(idx + 1, vals);
       delete vals[r.parameter];
       return;
@@ -282,6 +298,181 @@ function* generateFilteredCombos(ordered, defaults) {
   yield* recurse(0, {});
 }
 
+function parseMetricNumber(raw) {
+  const s = String(raw ?? "").replace(/,/g, "");
+  const m = s.match(/-?\d+(\.\d+)?/);
+  if (!m) return 0;
+  return Number(m[0]);
+}
+
+function computeRunScore(metrics) {
+  const netProfit = parseMetricNumber(metrics.netProfit);
+  const maxDrawdown = Math.abs(parseMetricNumber(metrics.maxDrawdown));
+  const profitFactor = parseMetricNumber(metrics.profitFactor);
+  return netProfit - (maxDrawdown * 2) + (profitFactor * 100);
+}
+
+function randomPick(values) {
+  return values[Math.floor(Math.random() * values.length)];
+}
+
+function buildComboKey(ordered, combo) {
+  return ordered
+    .map((r) => `${r.parameter}=${String(combo[r.parameter]?.value ?? "")}`)
+    .join("|");
+}
+
+function pickBestKnownValue(parameter, allowedValues, valueStats) {
+  const statsForParam = valueStats[parameter] || {};
+  let bestVal = null;
+  let bestScore = -Infinity;
+
+  for (const v of allowedValues) {
+    const key = String(v).trim().toLowerCase();
+    const stat = statsForParam[key];
+    if (!stat || stat.count <= 0) continue;
+    const avgScore = stat.scoreSum / stat.count;
+    const blended = (avgScore * 0.8) + (stat.bestScore * 0.2);
+    if (blended > bestScore) {
+      bestScore = blended;
+      bestVal = v;
+    }
+  }
+
+  return bestVal;
+}
+
+function buildAdaptiveCombo(ordered, defaults, currentState, fullDefaults, learningState) {
+  const merged = { ...fullDefaults, ...defaults };
+  const combo = {};
+  const vals = {};
+  const bestCombo = learningState.bestCombo;
+  const exploitRate = learningState.runCount < 20 ? 0.6 : 0.82;
+
+  for (const r of ordered) {
+    const conditionMet = rawConditionMet(r.parameter, vals, currentState, merged);
+    const allowed = conditionMet ? r.values : [merged[r.parameter] ?? r.values[0]];
+    let chosen = allowed[0];
+
+    if (allowed.length > 1) {
+      const bestComboValue = bestCombo?.[r.parameter]?.value;
+      const canUseBestComboValue = bestComboValue !== undefined &&
+        allowed.some((v) => String(v) === String(bestComboValue));
+
+      if (canUseBestComboValue && Math.random() < 0.65) {
+        chosen = allowed.find((v) => String(v) === String(bestComboValue));
+      } else if (Math.random() < exploitRate) {
+        chosen = pickBestKnownValue(r.parameter, allowed, learningState.valueStats) ?? randomPick(allowed);
+      } else {
+        chosen = randomPick(allowed);
+      }
+    }
+
+    vals[r.parameter] = chosen;
+    combo[r.parameter] = { label: r.label, type: r.type, value: chosen };
+  }
+
+  return combo;
+}
+
+function buildUniqueAdaptiveCombo(ordered, defaults, currentState, fullDefaults, learningState, seenComboKeys) {
+  let lastCombo = null;
+  for (let attempt = 0; attempt < 80; attempt++) {
+    const combo = buildAdaptiveCombo(ordered, defaults, currentState, fullDefaults, learningState);
+    const key = buildComboKey(ordered, combo);
+    if (!seenComboKeys.has(key)) return combo;
+    lastCombo = combo;
+  }
+  return lastCombo ?? buildAdaptiveCombo(ordered, defaults, currentState, fullDefaults, learningState);
+}
+
+function updateLearningState(learningState, combo, score) {
+  learningState.runCount += 1;
+  if (score > learningState.bestScore) {
+    learningState.bestScore = score;
+    learningState.bestCombo = JSON.parse(JSON.stringify(combo));
+  }
+
+  for (const [paramName, paramData] of Object.entries(combo)) {
+    const valueKey = String(paramData.value).trim().toLowerCase();
+    learningState.valueStats[paramName] ||= {};
+    learningState.valueStats[paramName][valueKey] ||= { count: 0, scoreSum: 0, bestScore: -Infinity };
+
+    const stat = learningState.valueStats[paramName][valueKey];
+    stat.count += 1;
+    stat.scoreSum += score;
+    stat.bestScore = Math.max(stat.bestScore, score);
+  }
+}
+
+function createEmptyLearningState() {
+  return {
+    runCount: 0,
+    bestScore: -Infinity,
+    bestCombo: null,
+    valueStats: {},
+    seenComboKeys: [],
+    lastCombo: null,
+    lastComboKey: null,
+  };
+}
+
+function loadLearningState(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return createEmptyLearningState();
+  }
+
+  try {
+    const raw = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    return {
+      runCount: Number(raw.runCount) || 0,
+      bestScore: Number.isFinite(raw.bestScore) ? raw.bestScore : -Infinity,
+      bestCombo: raw.bestCombo || null,
+      valueStats: raw.valueStats || {},
+      seenComboKeys: Array.isArray(raw.seenComboKeys) ? raw.seenComboKeys : [],
+      lastCombo: raw.lastCombo || null,
+      lastComboKey: raw.lastComboKey || null,
+    };
+  } catch (err) {
+    console.warn(`[WARN] Could not parse ${filePath}. Starting fresh learning state.`, err.message);
+    return createEmptyLearningState();
+  }
+}
+
+function saveLearningState(filePath, learningState, seenComboKeys, lastCombo, ordered) {
+  const payload = {
+    runCount: learningState.runCount,
+    bestScore: learningState.bestScore,
+    bestCombo: learningState.bestCombo,
+    valueStats: learningState.valueStats,
+    seenComboKeys: Array.from(seenComboKeys),
+    lastCombo: lastCombo || null,
+    lastComboKey: lastCombo ? buildComboKey(ordered, lastCombo) : null,
+    updatedAt: new Date().toISOString(),
+  };
+  fs.writeFileSync(filePath, JSON.stringify(payload, null, 2) + "\n", "utf8");
+}
+
+async function readFullTemplate() {
+  return new Promise((resolve, reject) => {
+    const rows = [];
+    fs.createReadStream("params_template.csv")
+      .pipe(csv())
+      .on("data", (row) => {
+        const name = String(row.parameter || "").trim();
+        if (!name) return;
+        rows.push({
+          parameter: name,
+          label: String(row.label || "").trim(),
+          type: String(row.type || "").trim().toLowerCase(),
+          defaultValue: String(row.start ?? row.defaultValue ?? "").trim(),
+        });
+      })
+      .on("end", () => resolve(rows))
+      .on("error", reject);
+  });
+}
+
 async function readStaticParams(sweptParamNames) {
   return new Promise((resolve, reject) => {
     const rows = [];
@@ -290,7 +481,10 @@ async function readStaticParams(sweptParamNames) {
       .on("data", (row) => {
         const name = String(row.parameter || "").trim();
         if (name && !sweptParamNames.has(name)) {
-          rows.push({ parameter: name, defaultValue: String(row.defaultValue || "").trim() });
+          rows.push({
+            parameter: name,
+            defaultValue: String(row.start ?? row.defaultValue ?? "").trim(),
+          });
         }
       })
       .on("end", () => resolve(rows))
@@ -440,6 +634,69 @@ async function scrollLabelIntoView(page, labelCell, label) {
   }
 }
 
+async function getInputValueByLabel(page, label) {
+  try {
+    const { labelCell, valueCell } = getStandardValueCell(page, label);
+    await scrollLabelIntoView(page, labelCell, label);
+    const input = valueCell.locator('input[data-qa-id="ui-lib-Input-input"]').first();
+    if ((await input.count()) === 0) return null;
+    return (await input.inputValue()).trim();
+  } catch {
+    return null;
+  }
+}
+
+async function getCheckboxValueByLabel(page, label) {
+  try {
+    const embeddedRow = getEmbeddedCheckboxRow(page, label);
+    if ((await embeddedRow.count()) > 0) {
+      const checked = await embeddedRow.locator('input[type="checkbox"]').first().getAttribute("aria-checked");
+      return normalizeBool(checked) ? "true" : "false";
+    }
+    const { labelCell, valueCell } = getStandardValueCell(page, label);
+    await scrollLabelIntoView(page, labelCell, label);
+    const checkbox = valueCell.locator('[aria-checked], input[type="checkbox"], [role="checkbox"]').first();
+    if ((await checkbox.count()) === 0) return null;
+    const checked = await checkbox.getAttribute("aria-checked");
+    return normalizeBool(checked) ? "true" : "false";
+  } catch {
+    return null;
+  }
+}
+
+async function getSelectValueByLabel(page, label) {
+  try {
+    const { labelCell, valueCell } = getStandardValueCell(page, label);
+    await scrollLabelIntoView(page, labelCell, label);
+    const trigger = valueCell.locator('[role="button"], [aria-haspopup="listbox"], button').first();
+    if ((await trigger.count()) === 0) return null;
+    const text = await trigger.innerText();
+    return (text || "").trim();
+  } catch {
+    return null;
+  }
+}
+
+async function readCurrentSettings(page, paramDefs) {
+  const current = {};
+  for (const def of paramDefs) {
+    if (!def.label) continue;
+    let value = null;
+    if (def.type === "numeric") {
+      value = await getInputValueByLabel(page, def.label);
+    } else if (def.type === "checkbox") {
+      value = await getCheckboxValueByLabel(page, def.label);
+    } else if (def.type === "select") {
+      value = await getSelectValueByLabel(page, def.label);
+    }
+    if (value != null && value !== "") {
+      current[def.parameter] = value;
+    }
+    await sleep(50);
+  }
+  return current;
+}
+
 async function setInputByLabel(page, label, value) {
   debugLog(`Trying to set input: "${label}" = ${value}`);
 
@@ -519,20 +776,28 @@ async function setSelectByLabel(page, label, value) {
   } catch {}
 }
 
-async function applyCombo(page, combo) {
+async function applyCombo(page, combo, currentState, fullDefaults, previousCombo = null) {
   debugLog("Applying parameter combination");
   await openStrategyInputs(page);
+  const runtimeVals = {};
 
   for (const [paramName, param] of Object.entries(combo)) {
     const cond = CONDITIONS[paramName];
     if (cond) {
-      const dep = combo[cond.dependsOn];
-      const depVal = dep ? String(dep.value).trim().toLowerCase() : undefined;
+      const depRaw = resolveDepValue(cond.dependsOn, runtimeVals, currentState, fullDefaults);
+      const depVal = depRaw !== undefined ? String(depRaw).trim().toLowerCase() : undefined;
       const reqVal = String(cond.requiredValue).trim().toLowerCase();
       if (depVal !== reqVal) {
         debugLog(`Skipping "${paramName}" — "${cond.dependsOn}" is "${depVal}", needs "${reqVal}"`);
         continue;
       }
+    }
+
+    const prevVal = previousCombo?.[paramName]?.value;
+    if (prevVal !== undefined && String(prevVal) === String(param.value)) {
+      debugLog(`Skipping "${paramName}" — unchanged from previous run (${param.value})`);
+      runtimeVals[paramName] = param.value;
+      continue;
     }
 
     debugLog(`Applying ${paramName}:`, param);
@@ -545,6 +810,7 @@ async function applyCombo(page, combo) {
       await setSelectByLabel(page, param.label, param.value);
     }
 
+    runtimeVals[paramName] = param.value;
     await sleep(150);
   }
 
@@ -618,26 +884,11 @@ async function main() {
 
   const ordered = prepareRanges(paramRows);
   const defaults = getDefaults(paramRows);
-  const totalCount = countFilteredCombos(ordered, defaults);
-  console.log(`Total unique combinations: ${totalCount.toLocaleString()}`);
-
-  let combos = null;
-  let comboCount = totalCount;
-
-  if (SAMPLE_SIZE && SAMPLE_SIZE < totalCount) {
-    combos = [];
-    let si = 0;
-    for (const combo of generateFilteredCombos(ordered, defaults)) {
-      if (si < SAMPLE_SIZE) {
-        combos.push(combo);
-      } else {
-        const j = Math.floor(Math.random() * (si + 1));
-        if (j < SAMPLE_SIZE) combos[j] = combo;
-      }
-      si++;
-    }
-    comboCount = combos.length;
-    console.log(`Random sample mode: ${comboCount} combinations selected`);
+  const fullTemplate = await readFullTemplate();
+  const fullDefaults = {};
+  for (const row of fullTemplate) {
+    const p = paramRows.find((r) => r.parameter === row.parameter);
+    fullDefaults[row.parameter] = hasValue(p?.defaultValue) ? p.defaultValue : row.defaultValue;
   }
 
   let startIndex = 0;
@@ -654,15 +905,6 @@ async function main() {
   } else {
     ensureResultsHeader(paramRows, staticParams);
   }
-
-  const remaining = comboCount - startIndex;
-  if (remaining <= 0) {
-    console.log("All combinations already completed. Nothing to do.");
-    return;
-  }
-
-  const estSeconds = remaining * 8;
-  console.log(`Runs remaining: ${remaining} | Estimated time: ~${formatDuration(estSeconds)}`);
 
   debugLog("Launching browser. Headless = false");
   const browser = await chromium.launch({ headless: false });
@@ -688,20 +930,64 @@ async function main() {
   await sleep(3000);
   await updateReportIfNeeded(page);
 
+  debugLog("Reading current strategy settings from chart (for swept params only)...");
+  await openStrategyInputs(page);
+  const currentState = await readCurrentSettings(page, paramRows);
+  debugLog("Current settings (enable/disable state):", Object.keys(currentState).length, "params read");
+  await page.locator(SELECTORS.okButton).click();
+  await sleep(500);
+
+  const totalCount = countFilteredCombos(ordered, defaults, currentState, fullDefaults);
+  console.log(`Total unique combinations (based on current chart settings): ${totalCount.toLocaleString()}`);
+
+  let comboCount = totalCount;
+  if (SAMPLE_SIZE && SAMPLE_SIZE < totalCount) {
+    comboCount = SAMPLE_SIZE;
+    console.log(`Sample mode: running ${comboCount} adaptive trials`);
+  }
+  if (ADAPTIVE_MODE) {
+    console.log("Adaptive mode enabled: favoring settings that produce better score over time");
+  }
+
+  const remaining = comboCount - startIndex;
+  if (remaining <= 0) {
+    console.log("All combinations already completed. Nothing to do.");
+    try { await browser.close(); } catch (_) {}
+    return;
+  }
+
+  const estSeconds = remaining * 8;
+  console.log(`Runs remaining: ${remaining} | Estimated time: ~${formatDuration(estSeconds)}`);
   console.log(`\nStarting ${remaining} runs...\n`);
 
   const runStart = Date.now();
   let successCount = 0;
   let failCount = 0;
+  if (WIPE_MEMORY) {
+    const fresh = createEmptyLearningState();
+    saveLearningState(LEARNING_STATE_FILE, fresh, new Set(), null, ordered);
+    console.log(`Memory wiped: ${LEARNING_STATE_FILE}`);
+  }
+  const persisted = loadLearningState(LEARNING_STATE_FILE);
+  const learningState = {
+    runCount: persisted.runCount,
+    bestScore: persisted.bestScore,
+    bestCombo: persisted.bestCombo,
+    valueStats: persisted.valueStats,
+  };
+  const seenComboKeys = new Set(persisted.seenComboKeys || []);
+  let lastAppliedCombo = persisted.lastCombo || null;
+  if (persisted.lastComboKey) seenComboKeys.add(persisted.lastComboKey);
+  const bestScoreText = Number.isFinite(learningState.bestScore) ? learningState.bestScore.toFixed(2) : "N/A";
+  console.log(`Learning state: ${seenComboKeys.size} seen combos, best score ${bestScoreText}`);
 
-  const source = combos || generateFilteredCombos(ordered, defaults);
-  let i = 0;
-
-  for (const combo of source) {
-    if (i < startIndex) { i++; continue; }
-
+  for (let i = startIndex; i < comboCount; i++) {
     const runId = i + 1;
     const runNum = i - startIndex + 1;
+    const combo = ADAPTIVE_MODE
+      ? buildUniqueAdaptiveCombo(ordered, defaults, currentState, fullDefaults, learningState, seenComboKeys)
+      : buildAdaptiveCombo(ordered, defaults, currentState, fullDefaults, learningState);
+    seenComboKeys.add(buildComboKey(ordered, combo));
 
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
@@ -712,12 +998,17 @@ async function main() {
         }
         debugLog("Current combo:", combo);
 
-        await applyCombo(page, combo);
+        await applyCombo(page, combo, currentState, fullDefaults, lastAppliedCombo);
 
         const metrics = await readPerformanceSummary(page);
         appendResult(combo, metrics, paramRows);
+        const score = computeRunScore(metrics);
+        updateLearningState(learningState, combo, score);
+        lastAppliedCombo = combo;
+        saveLearningState(LEARNING_STATE_FILE, learningState, seenComboKeys, lastAppliedCombo, ordered);
 
         successCount++;
+        console.log(`  [SCORE] ${score.toFixed(2)} | Best ${learningState.bestScore.toFixed(2)}`);
 
         const elapsed = (Date.now() - runStart) / 1000;
         const rate = runNum / elapsed;
@@ -749,12 +1040,11 @@ async function main() {
         } catch (_) {}
       }
     }
-
-    i++;
   }
 
   console.log(`\nFinished. ${successCount} succeeded, ${failCount} failed.`);
   console.log(`Results saved to: ${RESULTS_FILE}`);
+  saveLearningState(LEARNING_STATE_FILE, learningState, seenComboKeys, lastAppliedCombo, ordered);
 
   try { await browser.close(); } catch (_) {}
   debugLog("Runner finished");

@@ -6,6 +6,42 @@ Automates parameter sweeping for a TradingView strategy. It opens your chart in 
 
 ## Setup & Running
 
+### Desktop App (new)
+
+You can now run the optimizer as a desktop app:
+
+```bash
+npm start
+```
+
+Windows quick launch:
+
+- Double-click `launch-app.bat`
+
+Build a portable Windows `.exe`:
+
+- Double-click `build-exe.bat`
+- Output is created in the `dist` folder
+
+The app includes:
+- Start/Stop controls for `runner.js`
+- Live log streaming
+- Run options (`sample`, `resume`, `disable adaptive`, `wipe memory`)
+- Setup Assistant for README steps:
+  - Install Playwright Chromium
+  - Save TradingView session (`auth.json`)
+  - Extract `params_template.csv`
+- Results Center:
+  - View recent `results_*.csv`
+  - Open CSV directly
+  - Reveal file in folder
+
+CLI mode is still available:
+
+```bash
+npm run start:cli
+```
+
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) v18 or later

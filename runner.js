@@ -159,6 +159,13 @@ function buildValues(start, end, step) {
 
 function getValuesForParam(p) {
   if (p.type === "numeric") {
+    if (hasValue(p.options)) {
+      const nums = p.options
+        .split("|")
+        .map((v) => Number(String(v).trim()))
+        .filter((n) => Number.isFinite(n));
+      if (nums.length > 0) return nums;
+    }
     if (hasValue(p.start) && hasValue(p.end) && hasValue(p.step)) {
       return buildValues(Number(p.start), Number(p.end), Number(p.step));
     }

@@ -32,6 +32,15 @@
     "fixedSLDistanceTicks": { "dependsOn": "stopLossMode", "requiredValue": "Fixed Tick SL" },
     "trailTriggerTicks": { "dependsOn": "stopLossMode", "requiredValue": "Trailing SL" },
     "trailStepSizeTicks": { "dependsOn": "stopLossMode", "requiredValue": "Trailing SL" },
-    "tickTPDistance": { "dependsOn": "enableTickTP", "requiredValue": "true" }
+    "tickTPDistance": { "dependsOn": "enableTickTP", "requiredValue": "true" },
+    "enableFastTP": { "dependsOn": "enableMAXTP", "requiredValue": "true" },
+    "enableTPProtection": { "dependsOn": "enableMAXTP", "requiredValue": "true" },
+    "hTFSentimentTimeframe": { "dependsOn": "enableHTFSentiment", "requiredValue": "true" },
+    "outputSmoothing": { "dependsOn": "enableHTFSentiment", "requiredValue": "true" },
+    "triggerSmoothing": { "dependsOn": "enableHTFSentiment", "requiredValue": "true" },
+    "aTRLength": { "dependsOn": "enableHTFSentiment", "requiredValue": "true" },
+    "rangeMultiplier": { "dependsOn": "enableHTFSentiment", "requiredValue": "true" },
+    "rangeStyle": { "dependsOn": "enableHTFSentiment", "requiredValue": "true" },
+    "doubleFilter": { "dependsOn": "enableHTFSentiment", "requiredValue": "true" }
   }
 }

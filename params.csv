@@ -9,6 +9,7 @@ enableTPProtection,🛡️ Enable TP Protection,checkbox,false,false|true,,,
 enableTickTP,🎯 Enable Tick TP,checkbox,true,false|true,,,
 useMomentumFilter,🚀 Use Momentum Filter,checkbox,true,false|true,,,
 enableHTFSentiment,🧭 Enable HTF Sentiment,checkbox,true,false|true,,,
-fibRatio,Fib Ratio,numeric,1.3,,1.2,2.0,0.2
-minTicksFromTP,Min Ticks From TP,numeric,2,,1,5,2
-entryFibAdjust,Entry Fib Adjust,numeric,0.9,,0.5,1.5,0.1
+fibBBLength,📏 Fib BB Length,numeric,,100,200,1
+fibRatio,📊 Fib Ratio,numeric,1.3,,1.2,2.0,0.2
+minTicksFromTP,📏 Min Ticks From TP,numeric,2,,1,5,2
+entryFibAdjust,📐 Entry Fib Adjust,numeric,0.9,,0.5,1.5,0.1
